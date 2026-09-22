@@ -5,7 +5,7 @@
 # Requires Theos with an iOS 5.x/6.x SDK available. Deployment target
 # is pinned to 5.0 so nothing newer than iOS 5 symbols gets linked.
 
-TARGET   := iphone:clang:8.1:5.0
+TARGET   := iphone:clang:latest:5.0
 ARCHS    := armv7 armv7s
 
 include $(THEOS)/makefiles/common.mk
