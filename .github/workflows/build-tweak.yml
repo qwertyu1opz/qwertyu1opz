@@ -74,6 +74,19 @@ jobs:
           make clean || true
           make package FINALPACKAGE=1
 
+      - name: Repack .deb with gzip (old iOS 5 dpkg compatibility)
+        if: success()
+        run: |
+          set -eux
+          cd tweak/ViberLegacyTLS/packages
+          for deb in *.deb; do
+            tmp=$(mktemp -d)
+            dpkg-deb -R "$deb" "$tmp"
+            rm -f "$deb"
+            dpkg-deb -Zgzip --build "$tmp" "$deb"
+            ar t "$deb"
+          done
+
       - name: Upload .deb
         if: success()
         uses: actions/upload-artifact@v4
