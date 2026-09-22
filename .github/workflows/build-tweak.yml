@@ -11,6 +11,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     env:
       THEOS: /home/runner/theos
     steps:
@@ -79,3 +81,15 @@ jobs:
           name: ViberLegacyTLS-deb
           path: tweak/ViberLegacyTLS/packages/*.deb
           if-no-files-found: error
+
+      - name: Publish .deb into repo (dist/)
+        if: success()
+        run: |
+          set -eux
+          mkdir -p dist
+          cp tweak/ViberLegacyTLS/packages/*.deb dist/
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/*.deb
+          git commit -m "CI: publish built ViberLegacyTLS .deb [skip ci]" || { echo "no change"; exit 0; }
+          git push origin HEAD:claude/help-needed-xazcdt
