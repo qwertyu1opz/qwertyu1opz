@@ -1,0 +1,70 @@
+name: build-tweak
+
+on:
+  push:
+    branches: [ "claude/help-needed-xazcdt" ]
+    paths:
+      - "tweak/**"
+      - ".github/workflows/build-tweak.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential fakeroot rsync perl curl zip unzip git xz-utils
+
+      - name: Install ldid
+        run: |
+          sudo curl -sSL https://github.com/ProcursusTeam/ldid/releases/download/v2.1.5-procursus7/ldid_linux_x86_64 -o /usr/local/bin/ldid
+          sudo chmod +x /usr/local/bin/ldid
+          ldid || true
+
+      - name: Set up Theos
+        run: |
+          export THEOS=$HOME/theos
+          echo "THEOS=$THEOS" >> "$GITHUB_ENV"
+          git clone --quiet --recursive https://github.com/theos/theos.git "$THEOS"
+
+      - name: Install armv7-capable iOS SDK (8.1)
+        run: |
+          set -eux
+          cd "$THEOS/sdks"
+          # theos/sdks holds many SDKs; fetch only an armv7-capable one.
+          curl -sSL https://github.com/theos/sdks/archive/refs/heads/master.tar.gz -o sdks.tgz
+          tar -xzf sdks.tgz
+          # move an 8.x (armv7-capable) sdk into place; fall back to 7.1
+          if [ -d sdks-master/iPhoneOS8.1.sdk ]; then mv sdks-master/iPhoneOS8.1.sdk .; \
+          elif [ -d sdks-master/iPhoneOS7.1.sdk ]; then mv sdks-master/iPhoneOS7.1.sdk .; fi
+          rm -rf sdks-master sdks.tgz
+          ls -1
+
+      - name: Install Linux toolchain (Swift-based)
+        run: |
+          set -eux
+          cd "$THEOS/toolchain"
+          curl -sSL https://github.com/kabiroberai/swift-toolchain-linux/releases/download/v4.0.0/swift-5.9.2-ubuntu22.04.tar.xz -o tc.tar.xz
+          mkdir -p linux/iphone
+          tar -xf tc.tar.xz -C linux/iphone --strip-components=1
+          rm -f tc.tar.xz
+          ls linux/iphone/bin | head
+
+      - name: Build package
+        run: |
+          export THEOS=$HOME/theos
+          cd tweak/ViberLegacyTLS
+          make clean || true
+          make package FINALPACKAGE=1 messages=yes
+
+      - name: Upload .deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: ViberLegacyTLS-deb
+          path: tweak/ViberLegacyTLS/packages/*.deb
+          if-no-files-found: error
