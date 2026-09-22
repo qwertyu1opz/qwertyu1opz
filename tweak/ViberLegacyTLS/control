@@ -1,9 +1,0 @@
-Package: com.legacy.viberlegacytls
-Name: ViberLegacy TLS Compatibility
-Version: 0.1.0
-Architecture: iphoneos-arm
-Description: Forces iOS 5 compatible TLS stream settings for the Viber app so legacy builds can reach modern *.viber.com hosts without an external proxy. Version-agnostic: filters by bundle id and hooks CFNetwork, not app offsets.
-Author: legacy
-Maintainer: legacy
-Section: Tweaks
-Depends: mobilesubstrate
