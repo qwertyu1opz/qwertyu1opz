@@ -51,8 +51,7 @@ static void vl_apply(CFReadStreamRef rs, CFStringRef host) {
     VLLog("SSL settings applied host=%@ ok=%d", host ? host : CFSTR("(nil)"), ok);
 }
 
-%hookf(CFReadStreamRef, CFReadStreamCreateForHTTPRequest,
-       CFAllocatorRef alloc, CFHTTPMessageRef request) {
+%hookf(CFReadStreamRef, CFReadStreamCreateForHTTPRequest, CFAllocatorRef alloc, CFHTTPMessageRef request) {
     CFReadStreamRef rs = %orig(alloc, request);
     if (rs && request) {
         CFURLRef url = CFHTTPMessageCopyRequestURL(request);
@@ -70,9 +69,7 @@ static void vl_apply(CFReadStreamRef rs, CFStringRef host) {
     return rs;
 }
 
-%hookf(void, CFStreamCreatePairWithSocketToHost,
-       CFAllocatorRef alloc, CFStringRef host, UInt32 port,
-       CFReadStreamRef *readStream, CFWriteStreamRef *writeStream) {
+%hookf(void, CFStreamCreatePairWithSocketToHost, CFAllocatorRef alloc, CFStringRef host, UInt32 port, CFReadStreamRef *readStream, CFWriteStreamRef *writeStream) {
     %orig(alloc, host, port, readStream, writeStream);
     if (vl_is_viber_host(host) && readStream && *readStream)
         vl_apply(*readStream, host);
